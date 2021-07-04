@@ -11,7 +11,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.linear import Identity
 
-from onnx2pytorch.operations import Split
+from onnx2pytorch.operations import *
 from onnx2pytorch.convert.debug import debug_model_conversion
 from onnx2pytorch.convert.operations import convert_operations
 from onnx2pytorch.utils import get_inputs_names
@@ -69,6 +69,31 @@ class ConvertModel(nn.Module):
         )
 
         self.input_names = get_inputs_names(onnx_model)
+
+        replace_bn = False
+        modules_list = list(self.modules())[1:]
+        for i, m in enumerate(modules_list):
+            if type(m) == Sub and type(modules_list[i+1]) == Div:
+                bn_idx = i
+                normalize_mean = m.y.flatten().detach()
+                normalize_std = modules_list[i+1].y.flatten().detach()
+                replace_bn = True
+                if (normalize_mean == 0.0).all().item() and (normalize_std == 1.0).all().item():
+                    # Skip if no normalization needed.
+                    bn = None
+                    break
+                bn = torch.nn.BatchNorm2d(len(normalize_mean), eps=0.0).eval()
+                bn.running_mean.data = normalize_mean
+                bn.running_var.data = normalize_std.pow(2)
+                break
+
+        if replace_bn:
+            name_list = list(self._modules.keys())
+            self._modules.pop(name_list[bn_idx])
+            if bn is not None:
+                self._modules[name_list[bn_idx+1]] = bn
+            else:
+                self._modules.pop(name_list[bn_idx+1])
 
         if experimental:
             warnings.warn(

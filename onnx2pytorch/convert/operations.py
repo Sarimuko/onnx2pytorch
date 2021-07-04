@@ -99,7 +99,12 @@ def convert_operations(onnx_model, batch_dim=0):
         elif node.op_type == "Mul":
             op = torch.mul
         elif node.op_type == "Div":
-            op = torch.true_divide
+            # op = torch.true_divide
+            if onnx_model.graph.node[i - 1].op_type == "Constant":
+                y = torch.from_numpy(extract_attributes(onnx_model.graph.node[i - 1])["constant"])
+                op = Div(y)
+            else:
+                op = torch.true_divide
         elif node.op_type == "MatMul":
             if params:
                 weight = torch.from_numpy(numpy_helper.to_array(params[0]))
@@ -126,7 +131,12 @@ def convert_operations(onnx_model, batch_dim=0):
             else:
                 op = torch.matmul
         elif node.op_type == "Sub":
-            op = torch.sub
+            # op = torch.sub
+            if onnx_model.graph.node[i - 1].op_type == "Constant":
+                y = torch.from_numpy(extract_attributes(onnx_model.graph.node[i - 1])["constant"])
+                op = Sub(y)
+            else:
+                op = torch.sub
         elif node.op_type == "Pow":
             op = torch.pow
         elif node.op_type == "Sqrt":
