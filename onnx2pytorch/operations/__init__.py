@@ -17,6 +17,8 @@ from .split import Split
 from .squeeze import Squeeze
 from .resize import Resize, Upsample
 from .unsqueeze import Unsqueeze
+from .sub import Sub
+from .div import Div
 
 __all__ = [
     "Add",
@@ -39,4 +41,6 @@ __all__ = [
     "Resize",
     "Unsqueeze",
     "Upsample",
+    "Sub",
+    "Div",
 ]
