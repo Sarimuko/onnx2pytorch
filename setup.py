@@ -17,7 +17,11 @@ setup(
     license="apache-2.0",
     author="Talmaj Marinc",
     packages=PACKAGES,
-    install_requires=["torch>=1.4.0", "onnx>=1.6.0"],
+    install_requires=[
+        "torch>=1.4.0", 
+        "onnx>=1.6.0",
+        "protobuf<4.0",
+    ],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ToriML/onnx2pytorch",
